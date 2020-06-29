@@ -40,9 +40,14 @@ OmegaToPWM::OmegaToPWM(ros::NodeHandle& nh)
     }
 
     std::string ang_vel_topic;
+    /* Kashish
     if(!nh.getParam("controller/cmd_angular_vel_topic", ang_vel_topic))
     {	ang_vel_topic = "controller/cmd_angular_vel"; }
-
+*/
+     if(!nh.getParam("controller/final_cmd_angular_vel_topic", ang_vel_topic))
+    {	ang_vel_topic = "controller/final_cmd_angular_vel"; }
+    
+    
     pwm_cmd_ = new asl_gremlin_msgs::MotorPwm();
     omega_cmd_ = new asl_gremlin_pkg::SubscribeTopic<asl_gremlin_msgs::MotorAngVel>(nh, ang_vel_topic,20);
 }

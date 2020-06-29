@@ -131,6 +131,7 @@ include_directories(
             src/${PROJECT_NAME}/ControllerBase.cpp
             src/${PROJECT_NAME}/BackSteppingController.cpp
             src/${PROJECT_NAME}/OmegaToPWM.cpp
+            src/${PROJECT_NAME}/CollisionCone.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -146,6 +147,8 @@ add_executable(controllerGainSet_client src/controllerGainSet_client.cpp)
 add_executable(backstepping_controller_node src/backstepping_controller_node.cpp)
 add_executable(angular_vel_to_pwm_node src/angular_vel_to_pwm_node.cpp)
 add_executable(cmd_pwm_to_arduino_pwm src/cmd_pwm_to_arduino_pwm.cpp)
+add_executable(obstacle_pose src/obstacle_pose.cpp)
+add_executable(collision_cone_node src/collision_cone_node.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -161,6 +164,8 @@ add_dependencies(controllerGainSet_client ${PROJECT_NAME}_gencfg)
 add_dependencies(backstepping_controller_node ${PROJECT_NAME}_generate_messages_cpp ${PROJECT_NAME}_gencfg)
 add_dependencies(angular_vel_to_pwm_node ${PROJECT_NAME}_generate_messages_cpp ${PROJECT_NAME}_gencfg)
 add_dependencies(cmd_pwm_to_arduino_pwm ${PROJECT_NAME}_generate_messages_cpp ${PROJECT_NAME}_gencfg)
+add_dependencies(obstacle_pose ${PROJECT_NAME}_generate_messages_cpp ${PROJECT_NAME}_gencfg)
+add_dependencies(collision_cone_node ${PROJECT_NAME}_generate_messages_cpp ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -170,6 +175,8 @@ target_link_libraries(controllerGainSet_client ${catkin_LIBRARIES})
 target_link_libraries(backstepping_controller_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 target_link_libraries(angular_vel_to_pwm_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 target_link_libraries(cmd_pwm_to_arduino_pwm ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(obstacle_pose ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(collision_cone_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

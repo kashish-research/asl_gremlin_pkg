@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 	asl_gremlin_pkg::SubscribeTopic<std_msgs::Bool> sim(pwm2ard_nh,"start_sim");
 
     ros::Publisher pwm_pub = pwm2ard_nh.advertise<std_msgs::Int16MultiArray>
-                                                        ("arduino/cmd_pwm",20);
+                                                        ("arduino/cmd_pwm1",20);
     double rate = 10.0;
     if (!pwm2ard_nh.getParam("sim/rate", rate))
     {

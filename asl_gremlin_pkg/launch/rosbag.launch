@@ -1,0 +1,13 @@
+<launch>
+
+<node pkg="rosbag" type="record" name="log_actual_position" args="record -o /home/gnclab/bagfiles/rover_bag_files/actual_position /asl_gremlin1/state_feedback/selected_feedback"/>   
+
+<node pkg="rosbag" type="record" name="log_reference_trajectory" args="record -o /home/gnclab/bagfiles/rover_bag_files/reference_trajectory /asl_gremlin1/trajectory_generation/reference_trajectory"/> 
+
+<node pkg="rosbag" type="record" name="log_cmd_angular_speed" args="record -o /home/gnclab/bagfiles/rover_bag_files/commanded_angular_velocities /asl_gremlin1/controller/cmd_angular_vel"/>  
+
+<node pkg="rosbag" type="record" name="log_cmd_pwm_off_board" args="record -o /home/gnclab/bagfiles/rover_bag_files/commanded_pwm_off_board /asl_gremlin1/arduino/cmd_pwm1"/> 
+
+<node pkg="rosbag" type="record" name="log_cmd_pwm_on_board" args="record -o /home/gnclab/bagfiles/rover_bag_files/commanded_pwm_on_board /asl_gremlin1/arduino/cmd_pwm"/>    
+
+</launch>

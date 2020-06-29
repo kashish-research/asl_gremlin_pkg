@@ -23,6 +23,7 @@
 #include "controller_utilities.h"
 #include <dynamic_reconfigure/server.h>
 #include <asl_gremlin_msgs/MotorAngVel.h>
+#include <std_msgs/Float32.h>
 
 
 using namespace controller;
@@ -50,13 +51,15 @@ class BackSteppingController :
             delete wheel_angular_vel_;
         }
 
-        void calculate_control_action(const ref_state_type&, const act_state_type&) override;
+        double calculate_control_action(const ref_state_type&, const act_state_type&) override; //Kashish changed to double from void
         asl_gremlin_msgs::MotorAngVel* get_control_action() override;
 
         void reset(){
             wheel_angular_vel_->wl = 0.0;
             wheel_angular_vel_->wr = 0.0;
         }
+        
+       // double vel_cmd;
 
     private:
         int msg_count_ = 0;
@@ -67,7 +70,8 @@ class BackSteppingController :
         asl_gremlin_msgs::MotorAngVel* wheel_angular_vel_;
 
         double radius_of_wheel_ = 0.06858, vehicle_base_length_ = 0.3353,
-               max_wheel_angular_vel_ = 12.5; 
+               max_wheel_angular_vel_ = 12.5, vel_cmd=1; 
+               
 
         dynamic_reconfigure::Server<controller::controllerGainSetConfig> dr_gain_srv_;
         dynamic_reconfigure::Server<controller::controllerGainSetConfig>::CallbackType fun_;
@@ -107,7 +111,7 @@ BackSteppingController<ref_state_type, act_state_type>::BackSteppingController(r
 
 
 template<typename ref_state_type, typename act_state_type>
-void BackSteppingController<ref_state_type, act_state_type>::calculate_control_action(const ref_state_type& ref, const act_state_type& actual)
+double BackSteppingController<ref_state_type, act_state_type>::calculate_control_action(const ref_state_type& ref, const act_state_type& actual)
 {
     double actual_hdg = actual.heading*M_PI/180.0;
 
@@ -152,6 +156,8 @@ void BackSteppingController<ref_state_type, act_state_type>::calculate_control_a
 
     wheel_angular_vel_->wl = controller::saturate(-max_wheel_angular_vel_, wheel_angular_vel_->wl, max_wheel_angular_vel_);
     wheel_angular_vel_->wr = controller::saturate(-max_wheel_angular_vel_, wheel_angular_vel_->wr, max_wheel_angular_vel_);
+
+    return vel_cmd;
 }
 
 template<typename ref_state_type, typename act_state_type>
@@ -164,6 +170,7 @@ asl_gremlin_msgs::MotorAngVel* BackSteppingController<ref_state_type, act_state_
 
     return wheel_angular_vel_;
 }
+
 
 template<typename ref_state_type, typename act_state_type>
 void BackSteppingController<ref_state_type, act_state_type>::

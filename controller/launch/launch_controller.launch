@@ -10,16 +10,31 @@
 
 <node   ns="$(arg robot_name)"
         pkg="controller"
-        name="angular_vel_to_pwm"
+        name="angular_vel_to_pwm_node"
         type="angular_vel_to_pwm_node"
         respawn="true"
         output="screen" />
+     
+<node   ns="$(arg robot_name)"
+        pkg="controller"
+        name="obstacle_pose_publisher"
+        type="obstacle_pose"
+        respawn="true"
+        output="screen" />        
         
- <node   ns="$(arg robot_name)"
+<!--         --> 
+<node   ns="$(arg robot_name)"
         pkg="controller"
         name="cmd_pwm_to_arduino_pwm"
         type="cmd_pwm_to_arduino_pwm"
         respawn="true"
-        output="screen" />      
-
+        output="screen" />    
+        
+<node   ns="$(arg robot_name)"
+        pkg="controller"
+        name="collision_cone"
+        type="collision_cone_node"
+        respawn="true"
+        output="screen" />             
+ 
 </launch>

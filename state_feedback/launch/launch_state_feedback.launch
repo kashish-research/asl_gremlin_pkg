@@ -1,7 +1,7 @@
 <launch>
 
 <arg name="robot_name" default="asl_gremlin1" />
-
+<!--
 <node   ns="$(arg robot_name)"
         name="timestamp_encoder"
         pkg="state_feedback"
@@ -29,7 +29,7 @@
         type="gps_to_pose"
         respawn="true"
         output="screen" />
-
+-->
 <node   ns="$(arg robot_name)"
         name="feedback_selected"
         pkg="state_feedback"
