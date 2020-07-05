@@ -37,14 +37,12 @@ class CollisionCone{
         ros::Subscriber obstacle_pose_sub;
         ros::Subscriber vehicle_pose_sub;
         ros::Subscriber cmd_ang_sub;
+        double roverSpeed;
         double collisionConeY;
         double timeToCollision;
         double timeToCollisionThrshold = 5;
         double radiusSum=0.5; // radius of vehicle + radius of obstacle
         double aLat;
-        double radius_of_wheel = 0.06858, vehicle_base_length_ = 0.3353,
-               max_wheel_angular_vel_ = 12.5;
-        std::array<double,3> lambda_gains_{{0.2, 0.2, 5.0}};     
         asl_gremlin_msgs::RefTraj refCollAvoidTraj; 
         
         
@@ -60,6 +58,7 @@ class CollisionCone{
         asl_gremlin_msgs::MotorAngVel getBckstpCmdVel();
         double getCollisionConeY();
         double getTimeToCollision();
+        double getRoverSpeed();
         double getTimeToCollsnThrshold();
         ~CollisionCone();
         

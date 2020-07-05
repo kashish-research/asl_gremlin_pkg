@@ -56,14 +56,14 @@ void CollisionCone::computeCollisionConeY()
     
     double roverSpeedY =  (vehicleState.pose.point.y - vehicleStatePrevious.pose.point.y) / deltaT;
     
-    double roverSpeed = std::sqrt(roverSpeedX*roverSpeedX + roverSpeedY*roverSpeedY);
+    roverSpeed = std::sqrt(roverSpeedX*roverSpeedX + roverSpeedY*roverSpeedY);
     
     double distanceRoverWp = std::sqrt( std::pow(vehicleState.pose.point.x-obstacleState.pose.point.x,2) + 
                                         std::pow(vehicleState.pose.point.y-obstacleState.pose.point.y,2) );
-   
+       
     double LosAngle = std::atan2(obstacleState.pose.point.y-vehicleState.pose.point.y, 
                                         obstacleState.pose.point.x-vehicleState.pose.point.x);
-    
+   
     double headingAngle =  std::atan2(roverSpeedY,roverSpeedX);      
 
     double Vr =  - roverSpeed * std::cos(headingAngle-LosAngle);       
@@ -71,10 +71,13 @@ void CollisionCone::computeCollisionConeY()
  
     collisionConeY =  pow(distanceRoverWp,2)*pow(Vtheta,2)/( pow(Vtheta,2) + pow(distanceRoverWp,2)) - pow(radiusSum,2);
     
+    //std::cout <<  std::to_string(collisionConeY) << std::endl;
+    
    // collisionConeY = -1;
     
     timeToCollision = -Vr*distanceRoverWp/( pow(Vr,2) + pow(Vtheta,2)); 
     
+         
   if (collisionConeY<0 & timeToCollision>0 & timeToCollision<timeToCollisionThrshold)
 
     { 
@@ -86,7 +89,7 @@ void CollisionCone::computeCollisionConeY()
     double den = Vr*std::cos(headingAngle-LosAngle) + Vtheta*std::sin(headingAngle-LosAngle);
     
     aLat = num/den; 
-    
+        
     double refAccX = aLat*std::cos(headingAngle + M_PI/2);
     double refAccY = aLat*std::sin(headingAngle + M_PI/2);
     
@@ -149,6 +152,8 @@ asl_gremlin_msgs::MotorAngVel CollisionCone::getBckstpCmdVel() {return bckstpCmd
 double CollisionCone::getCollisionConeY() { return collisionConeY; }
 
 double CollisionCone::getTimeToCollision(){ return timeToCollision; }
+
+double CollisionCone::getRoverSpeed() {return roverSpeed;} 
 
 CollisionCone::~CollisionCone()
 {

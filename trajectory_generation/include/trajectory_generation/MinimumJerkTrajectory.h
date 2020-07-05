@@ -158,8 +158,8 @@ void MinimumJerkTrajectory<ParamType>::calc_x_coeff_(double t_final)
 {
     x_coeff_[0] = x_ini_;
     x_coeff_[3] = 10*(x_final_ - x_ini_)/(std::pow(t_final,3)); 
-    x_coeff_[4] = -15*(x_final_ - x_ini_)/(std::pow(t_final,4));
-    x_coeff_[5] = 6*(x_final_ - x_ini_)/(std::pow(t_final,5));
+    x_coeff_[4] = -15*(x_final_ - x_ini_)/(std::pow(t_final,4)); 
+    x_coeff_[5] = 6*(x_final_ - x_ini_)/(std::pow(t_final,5)); 
 }
 
 template<typename ParamType>

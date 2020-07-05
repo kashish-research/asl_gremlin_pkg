@@ -15,6 +15,10 @@
 #include "controller/CollisionCone.h"
 #include <asl_gremlin_msgs/RefTraj.h>
 #include <controller/BackSteppingController.h>
+#include <std_msgs/Float64.h>
+#include <trajectory_generation/TrajectorySwitcher.h>
+
+using namespace  trajectory_generation;
 
 using namespace controller;
 
@@ -25,7 +29,7 @@ int main(int argc, char** argv)
     
     ros::NodeHandle collision_nh;
     
-    double rate = 50.0;
+    double rate = 10.0;
     
     ros::Rate loop_rate(rate);
     
@@ -33,10 +37,17 @@ int main(int argc, char** argv)
     
     ros::Publisher cmd_ang_pub =  collision_nh.advertise<asl_gremlin_msgs::MotorAngVel>("/asl_gremlin1/controller/final_cmd_angular_vel", 10);   
     
+    //// For debugging purposes--
+    ros::Publisher collision_cone_y =  collision_nh.advertise<std_msgs::Float64>("/asl_gremlin1/collision_cone_y", 10);  
+    ros::Publisher roverSpeedPublisher  =  collision_nh.advertise<std_msgs::Float64>("/asl_gremlin1/rover_speed", 10);  
+    ////
     std::unique_ptr<ControllerBase<asl_gremlin_msgs::RefTraj, asl_gremlin_msgs::VehicleState>> controller = 
                             std::make_unique<BackSteppingController<asl_gremlin_msgs::RefTraj, asl_gremlin_msgs::VehicleState>>(collision_nh);
 
-    double y,tm,tm_thrshhold;
+    double y,tm,tm_thrshhold, roverSpeed;
+    
+    std_msgs::Float64 collision_cone_y_value;
+    std_msgs::Float64 roverSpeed_value;
     
 	while(ros::ok())
     {
@@ -45,11 +56,13 @@ int main(int argc, char** argv)
     y = collision_cone_object.getCollisionConeY();
     tm = collision_cone_object.getTimeToCollision();
     tm_thrshhold = collision_cone_object.getTimeToCollsnThrshold();
+    roverSpeed = collision_cone_object.getRoverSpeed();
     
    
         if(y<0)// & tm>0 & tm<tm_thrshhold)
         {
-        std::cout <<  collision_cone_object.getRefTraj().x << std::endl;
+        TrajectorySwitcher::collision_detected = true;
+        //std::cout <<  collision_cone_object.getRefTraj().x << std::endl;
         
             controller->calculate_control_action( collision_cone_object.getRefTraj(),collision_cone_object.getVehicleState());
             
@@ -57,8 +70,18 @@ int main(int argc, char** argv)
         }
         else
         {
+        TrajectorySwitcher::collision_avoided = true;
         cmd_ang_pub.publish( collision_cone_object.getBckstpCmdVel() );
         }
+     
+        cmd_ang_pub.publish( collision_cone_object.getBckstpCmdVel() );
+        
+        collision_cone_y_value.data = y;
+        roverSpeed_value.data = roverSpeed;
+        
+        collision_cone_y.publish(collision_cone_y_value);
+        roverSpeedPublisher.publish(roverSpeed_value);
+        
         
         ros::spinOnce();
         loop_rate.sleep();

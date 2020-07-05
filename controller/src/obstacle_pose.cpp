@@ -34,8 +34,8 @@ int main(int argc, char** argv)
         pose.pose.header.stamp = ros::Time::now();
         pose.pose.header.seq=count;
         pose.pose.header.frame_id = "Inertial Frame";  
-        pose.pose.point.x = 1;
-        pose.pose.point.y = 1;
+        pose.pose.point.x = 0;
+        pose.pose.point.y = 0;
         pose.pose.point.z = 0;
         pose.heading = 0;
     	pub.publish(pose);

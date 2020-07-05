@@ -157,6 +157,11 @@ double BackSteppingController<ref_state_type, act_state_type>::calculate_control
     wheel_angular_vel_->wl = controller::saturate(-max_wheel_angular_vel_, wheel_angular_vel_->wl, max_wheel_angular_vel_);
     wheel_angular_vel_->wr = controller::saturate(-max_wheel_angular_vel_, wheel_angular_vel_->wr, max_wheel_angular_vel_);
 
+    if( (ref.header.frame_id).compare("collision_avoidance") ==0 )
+    {
+    wheel_angular_vel_->header.frame_id  =  "collision_avoidance";
+    }
+
     return vel_cmd;
 }
 
@@ -165,7 +170,10 @@ asl_gremlin_msgs::MotorAngVel* BackSteppingController<ref_state_type, act_state_
 {
     wheel_angular_vel_->header.seq       =  msg_count_;
     wheel_angular_vel_->header.stamp     =  ros::Time::now();
+    if( (wheel_angular_vel_->header.frame_id).compare("collision_avoidance") !=0 )
+    {
     wheel_angular_vel_->header.frame_id  =  "wheel frame";
+    }
     ++msg_count_;
 
     return wheel_angular_vel_;

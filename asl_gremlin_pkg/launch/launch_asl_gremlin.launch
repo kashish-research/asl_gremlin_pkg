@@ -22,9 +22,9 @@
         type="aslRoverYaw"
         respawn="true"
         output="screen" />
-	<!--
+	
 	<include file="$(find asl_gremlin_pkg)/launch/rosbag.launch">
   </include>	
--->
+<!-- -->
 </launch>
 
