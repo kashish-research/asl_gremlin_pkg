@@ -17,6 +17,7 @@
 #include <vector>
 #include <ros/ros.h>
 #include <cmath>
+#include <numeric>
 #include <asl_gremlin_msgs/MotorPwm.h>
 #include <asl_gremlin_msgs/VehicleState.h>
 #include <asl_gremlin_msgs/MotorAngVel.h>
@@ -26,9 +27,12 @@
 
 #define SIGN(x) (x>0?1:(x==0?0:-1))
 
+using namespace std;
+
 namespace controller{
 
 class CollisionCone{
+
     private:
         asl_gremlin_msgs::VehicleState obstacleState;
         asl_gremlin_msgs::VehicleState vehicleState;
@@ -38,20 +42,26 @@ class CollisionCone{
         ros::Subscriber vehicle_pose_sub;
         ros::Subscriber cmd_ang_sub;
         double roverSpeed;
+	double roverSpeedFiltered;
+	double roverSpeedFilteredX;
+	double roverSpeedFilteredY;
         double collisionConeY;
         double timeToCollision;
-        double timeToCollisionThrshold = 5;
+        double timeToCollisionThrshold;
         double radiusSum=0.5; // radius of vehicle + radius of obstacle
         double aLat;
         asl_gremlin_msgs::RefTraj refCollAvoidTraj; 
-        
+        int slidingFilterLength=10;
+	vector<double> roverSpeedVectorX{vector<double>(slidingFilterLength,0)};
+	vector<double> roverSpeedVectorY{vector<double>(slidingFilterLength,0)};     
+	int filterCurrentIndex;    
         
 
     public:
         CollisionCone(ros::NodeHandle& nh);
         void vehicleStateCb(const asl_gremlin_msgs::VehicleState::ConstPtr& msg);
         void obstacleStateCb(const asl_gremlin_msgs::VehicleState::ConstPtr& msg);  
-        void angVelCb(const asl_gremlin_msgs::MotorAngVel::ConstPtr& msg);      
+        void angVelCb(const asl_gremlin_msgs::MotorAngVel::ConstPtr& msg);     
         void computeCollisionConeY();
         asl_gremlin_msgs::RefTraj getRefTraj();
         asl_gremlin_msgs::VehicleState getVehicleState();
@@ -60,6 +70,8 @@ class CollisionCone{
         double getTimeToCollision();
         double getRoverSpeed();
         double getTimeToCollsnThrshold();
+        double getRoverSpeedFiltered();
+        void setTimeToCollsnThrshold(double tm_thrshhold);
         ~CollisionCone();
         
 };

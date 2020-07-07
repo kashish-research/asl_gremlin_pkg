@@ -60,12 +60,22 @@ struct circle_params{
     }
 };
 
+std_msgs::Bool collision_detected;
+void colnDetSubCb(const std_msgs::Bool::ConstPtr& msg)
+{
+    collision_detected = *msg;
+
+}
+
 
 int main(int argc, char** argv)
 {
     ros::init(argc, argv , "trajectory_generation"); 
 
     ros::NodeHandle traj_nh;
+
+    ros::Subscriber collision_detected_sub = traj_nh.subscribe<std_msgs::Bool>
+            ("/asl_gremlin1/collision_detected", 10, colnDetSubCb);   
 
     traj_params params(traj_nh);
     circle_params params_circle(traj_nh);
@@ -102,6 +112,7 @@ int main(int argc, char** argv)
     bool updated_ini_params = false;
     bool aligned_rover = false;
     std::vector<double> waypoint(2,0);
+    bool collision_avoided = false;
     
     ROS_INFO("\033[1;32mInitialized\033[0;m:= %s",ros::this_node::getName().c_str());
     while(ros::ok())
@@ -174,7 +185,7 @@ int main(int argc, char** argv)
                     traj_gen->calc_params();
                 }
                 
-                if ( collision_avoided )
+                if ( !collision_detected.data && collision_avoided )
                 {
                     ROS_INFO("Collision Avoided, Switching Back to Current Waypoint");
                     
@@ -195,7 +206,7 @@ int main(int argc, char** argv)
                         aligned_rover = false;
                     }
     
-                    traj_gen->set_current_pose_as_ini();    //Kashish
+                    traj_gen->set_current_pose_as_ini();   
                     traj_gen->set_final_pose(waypoint[0], waypoint[1]);
                     traj_gen->calc_params();
 
@@ -204,11 +215,19 @@ int main(int argc, char** argv)
                 
                 
                 
-                if ( !collision_detected )
+                if ( collision_detected.data )
                 {    
-                    traj_gen->generate_traj(ros::Time::now().toSec());
+                    ROS_INFO("Collision Detected ");
+                    collision_avoided = true;
                 }
+		else
+		{
+			traj_gen->generate_traj(ros::Time::now().toSec());	
+		}
                 
+
+	//	traj_gen->generate_traj(ros::Time::now().toSec());	
+
             }
         }
         else if (!(sim.get_data())->data && updated_ini_params)

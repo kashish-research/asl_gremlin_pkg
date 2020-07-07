@@ -14,6 +14,7 @@
 #include "controller/CollisionCone.h"
 
 using namespace controller;
+using namespace std;
 
 void CollisionCone::obstacleStateCb(const asl_gremlin_msgs::VehicleState::ConstPtr& msg)
 {
@@ -34,7 +35,7 @@ void CollisionCone::angVelCb(const asl_gremlin_msgs::MotorAngVel::ConstPtr& msg)
 
 CollisionCone::CollisionCone(ros::NodeHandle& nh)
 {
-   obstacle_pose_sub = nh.subscribe<asl_gremlin_msgs::VehicleState>
+	obstacle_pose_sub = nh.subscribe<asl_gremlin_msgs::VehicleState>
             ("/asl_gremlin1/obstacle/pose", 10, &CollisionCone::obstacleStateCb,this);
     
    vehicle_pose_sub = nh.subscribe<asl_gremlin_msgs::VehicleState>
@@ -42,7 +43,8 @@ CollisionCone::CollisionCone(ros::NodeHandle& nh)
             
    cmd_ang_sub =  nh.subscribe<asl_gremlin_msgs::MotorAngVel>("/asl_gremlin1/controller/bckstp_cmd_angular_vel", 10, &CollisionCone::angVelCb,this); 
    
-           
+ 	filterCurrentIndex = 0;     
+   
     
 }
 
@@ -58,16 +60,31 @@ void CollisionCone::computeCollisionConeY()
     
     roverSpeed = std::sqrt(roverSpeedX*roverSpeedX + roverSpeedY*roverSpeedY);
     
+	roverSpeedVectorX.insert( roverSpeedVectorX.begin()+filterCurrentIndex, roverSpeedX);
+	
+	roverSpeedVectorY.insert( roverSpeedVectorY.begin()+filterCurrentIndex, roverSpeedY);
+	
+	roverSpeedFilteredX += accumulate(roverSpeedVectorX.begin(),
+							roverSpeedVectorX.end(),0) / slidingFilterLength;
+	
+	roverSpeedFilteredY += accumulate(roverSpeedVectorY.begin(),
+								roverSpeedVectorY.end(),0) / slidingFilterLength;
+	
+	roverSpeedFiltered = std::sqrt(roverSpeedFilteredX*roverSpeedFilteredX +
+									 roverSpeedFilteredY*roverSpeedFilteredY);
+	
+	filterCurrentIndex = (filterCurrentIndex + 1) % 100;
+
     double distanceRoverWp = std::sqrt( std::pow(vehicleState.pose.point.x-obstacleState.pose.point.x,2) + 
                                         std::pow(vehicleState.pose.point.y-obstacleState.pose.point.y,2) );
        
     double LosAngle = std::atan2(obstacleState.pose.point.y-vehicleState.pose.point.y, 
                                         obstacleState.pose.point.x-vehicleState.pose.point.x);
    
-    double headingAngle =  std::atan2(roverSpeedY,roverSpeedX);      
+    double headingAngle =  std::atan2(roverSpeedFilteredY,roverSpeedFilteredX);      
 
-    double Vr =  - roverSpeed * std::cos(headingAngle-LosAngle);       
-    double Vtheta =   - roverSpeed * std::cos(headingAngle-LosAngle);   
+    double Vr =  - roverSpeedFiltered * std::cos(headingAngle-LosAngle);       
+    double Vtheta =   - roverSpeedFiltered * std::cos(headingAngle-LosAngle);   
  
     collisionConeY =  pow(distanceRoverWp,2)*pow(Vtheta,2)/( pow(Vtheta,2) + pow(distanceRoverWp,2)) - pow(radiusSum,2);
     
@@ -93,8 +110,8 @@ void CollisionCone::computeCollisionConeY()
     double refAccX = aLat*std::cos(headingAngle + M_PI/2);
     double refAccY = aLat*std::sin(headingAngle + M_PI/2);
     
-    double refVelX = roverSpeedX + refAccX * deltaT;
-    double refVelY = roverSpeedY + refAccY * deltaT;
+    double refVelX = roverSpeedFilteredX + refAccX * deltaT;
+    double refVelY = roverSpeedFilteredY + refAccY * deltaT;
     
     double refX = vehicleState.pose.point.x + refVelX * deltaT;
     double refY = vehicleState.pose.point.y + refVelY * deltaT;
@@ -113,33 +130,13 @@ void CollisionCone::computeCollisionConeY()
     
     }
  
-    /*
-    double error_x = vehicleState.pose.point.x - refX;
-    double error_y = vehicleState.pose.point.y - refY;
-    
-    double cmdVel = std::sqrt( refVelX*refVelX + refVelY*refVelY );
-    
-    double angular_vel_sum = (2/radius_of_wheel)*cmdVel,
-           angular_vel_diff = 0.0;
-
-    double lambda_x = lambda_gains_[0] * std::log(std::fabs( (error_x/0.1) + 0.01));
-    double lambda_y = lambda_gains_[1] * std::log(std::fabs( (error_y/0.1) + 0.01));
-    
-    double x_act_dot_req = refVelX  - lambda_x*error_x;
-    double y_act_dot_req = refVelY  - lambda_y*error_y;
-    
-    double theta_cmd = std::atan2(y_act_dot_req, x_act_dot_req);
-    
-    
-    double lambda_theta = lambda_gains_[2] * std::log(std::fabs( (error_y/0.1) + 0.01));
-
-    if ( cmdVel <= 0.2 )
-    { 
-        angular_vel_diff = -lambda_theta_ * controller::delta_theta(actual_hdg, ref.theta); }
-  */
+ 
   
   
     }
+    
+void CollisionCone::setTimeToCollsnThrshold(double tm_thrshhold) 
+{timeToCollisionThrshold = tm_thrshhold;}
 
 asl_gremlin_msgs::RefTraj CollisionCone::getRefTraj(){return refCollAvoidTraj;}
 
@@ -154,6 +151,8 @@ double CollisionCone::getCollisionConeY() { return collisionConeY; }
 double CollisionCone::getTimeToCollision(){ return timeToCollision; }
 
 double CollisionCone::getRoverSpeed() {return roverSpeed;} 
+
+double CollisionCone::getRoverSpeedFiltered() {return roverSpeedFiltered;} 
 
 CollisionCone::~CollisionCone()
 {

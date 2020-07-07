@@ -36,10 +36,10 @@ int main(int argc, char** argv)
     ros::NodeHandle feedback_nh;
     
     ros::Subscriber state_sub = feedback_nh.subscribe<geometry_msgs::TransformStamped>("/vicon/aslRover1/aslRover1",10,state_cb);
+    
     ros::Subscriber state_sub1 = feedback_nh.subscribe<std_msgs::Float64>("/vicon/yaw",10,state_cb1);
     
-    ros::Publisher local_pos_pub = feedback_nh.advertise<asl_gremlin_msgs::VehicleState>("/asl_gremlin1/state_feedback/selected_feedback",10);
-    
+    ros::Publisher local_pos_pub = feedback_nh.advertise<asl_gremlin_msgs::VehicleState>("/asl_gremlin1/state_feedback/selected_feedback",10);    
     
     asl_gremlin_msgs::VehicleState pose;
     
@@ -47,13 +47,16 @@ int main(int argc, char** argv)
     
     int count = 0;
     
+    double offsetX = +3;
+    double offsetY = +3;
+    
     while(ros::ok())
     {
         pose.pose.header.stamp = ros::Time::now();
         pose.pose.header.seq = count;
         pose.pose.header.frame_id = "vicon data";
-        pose.pose.point.x = current_state.transform.translation.x;    
-        pose.pose.point.y = current_state.transform.translation.y;
+        pose.pose.point.x = current_state.transform.translation.x + offsetX;    
+        pose.pose.point.y = current_state.transform.translation.y + offsetY;
         pose.pose.point.z = current_state.transform.translation.z;
         pose.heading = yaw.data;
         local_pos_pub.publish(pose);

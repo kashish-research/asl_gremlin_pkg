@@ -69,6 +69,7 @@ void WaypointSubscribe::dynamic_reconfigure_waypointSet_callback(trajectory_gene
     }
     */
     ////////////////////////
+    
     std::cout << "\033[1;37mX_wp\033[0;m:= ";
     utility_pkg::print_stl_container(x_waypoints_);
 
