@@ -59,17 +59,13 @@ void WaypointSubscribe::dynamic_reconfigure_waypointSet_callback(trajectory_gene
     { ROS_WARN("Unequal waypoint stack sizes between X and Y, rectify this before 'Rover Initialization'"); }
     
     ROS_INFO("\033[0;33mUpdated\033[0;m:= {Waypoints}--> \033[1;37mbeep boop beep\033[0;m");
-     
-     ///Kashish  
-     /*
+       
     if (std::fabs(x_waypoints_[0]) < 2 && std::fabs(y_waypoints_[0]) < 2)
     {
         x_waypoints_.erase(std::begin(x_waypoints_));
         y_waypoints_.erase(std::begin(y_waypoints_));
     }
-    */
-    ////////////////////////
-    
+
     std::cout << "\033[1;37mX_wp\033[0;m:= ";
     utility_pkg::print_stl_container(x_waypoints_);
 

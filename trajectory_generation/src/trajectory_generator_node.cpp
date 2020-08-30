@@ -89,9 +89,10 @@ int main(int argc, char** argv)
                     waypoint_stack.reset_counter();
                     dist_to_wp->reset_vehicle_state();
                     ROS_INFO("\033[1;32mStarted\033[0;m:= Generating trajectory for given waypoints");
-                    min_jerk_traj->set_ini_pose(0.0, 0.0);
-
-                    waypoint = waypoint_stack.get_current_waypoint();
+//                    min_jerk_traj->set_ini_pose(0.0, 0.0);
+	            min_jerk_traj->set_current_pose_as_ini();
+                   
+		    waypoint = waypoint_stack.get_current_waypoint();
                     dist_to_wp->change_next_desired_state(waypoint[0], waypoint[1]);
                     dist_to_wp->change_switch_condition(trajSwitchCond::dist_to_waypoint);
 

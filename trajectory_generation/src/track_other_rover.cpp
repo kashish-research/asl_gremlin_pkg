@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     ros::Publisher traj_pub = traj_nh.advertise<asl_gremlin_msgs::RefTraj>(traj_pub_name, 10);
 
     asl_gremlin_pkg::SubscribeTopic<asl_gremlin_msgs::VehicleState>
-                            asl_gremlin1_state(traj_nh, "/asl_gremlin2/state_feedback/selected_feedback");
+                            asl_gremlin1_state(traj_nh, "/asl_gremlin1/state_feedback/selected_feedback");
 
     double rate = 10.0;
     if (!traj_nh.getParam("sim/rate", rate))
@@ -109,8 +109,23 @@ int main(int argc, char** argv)
     {
         if ( (sim.get_data())->data )
         {
-            initialized = true;
-            FOR_EVERY(30s)
+            if (!initialized)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                ros::spinOnce();
+                if(traj_gen != nullptr)
+                {
+                    traj_gen->set_current_pose_as_ini();
+                    traj_gen->set_final_pose(0.0,0.0);
+                }
+                else
+                {
+                    min_jerk_traj->set_current_pose_as_ini();
+                    min_jerk_traj->set_final_pose(0.0,0.0);
+                }
+                initialized = true;
+            }
+            FOR_EVERY(10s)
             {
                 double rover1_pose_x = (asl_gremlin1_state.get_data())->pose.point.x;
                 double rover1_pose_y = (asl_gremlin1_state.get_data())->pose.point.y;
@@ -168,6 +183,7 @@ int main(int argc, char** argv)
             reached_waypoint = false;
             initialized = false;
             previously_switched_traj = false;
+            waypoint_prev[0] = 0; waypoint_prev[1] = 0;
             switch_trajectory->reset_vehicle_state();
         }
 

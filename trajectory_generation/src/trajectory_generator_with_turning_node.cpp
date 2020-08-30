@@ -67,7 +67,6 @@ void colnDetSubCb(const std_msgs::Bool::ConstPtr& msg)
 
 }
 
-
 int main(int argc, char** argv)
 {
     ros::init(argc, argv , "trajectory_generation"); 
@@ -93,7 +92,7 @@ int main(int argc, char** argv)
     std::unique_ptr<TrajectorySwitcher> switch_trajectory = 
                             std::make_unique<TrajectorySwitcher>(traj_nh);
 
-    asl_gremlin_pkg::SubscribeTopic<std_msgs::Bool> sim(traj_nh,"start_sim");
+    asl_gremlin_pkg::SubscribeTopic<std_msgs::Bool> sim(traj_nh,"start_sim"); 
     
     std::string traj_pub_name;
     if(!traj_nh.getParam("trajectory/publisher_topic", traj_pub_name))
@@ -112,7 +111,6 @@ int main(int argc, char** argv)
     bool updated_ini_params = false;
     bool aligned_rover = false;
     std::vector<double> waypoint(2,0);
-    bool collision_avoided = false;
     
     ROS_INFO("\033[1;32mInitialized\033[0;m:= %s",ros::this_node::getName().c_str());
     while(ros::ok())
@@ -146,8 +144,9 @@ int main(int argc, char** argv)
                         switch_trajectory->change_switch_condition(trajSwitchCond::dist_to_waypoint);
                         aligned_rover = false;
                     }
-    
-                    traj_gen->set_current_pose_as_ini();    //Kashish
+
+	           // traj_gen->set_ini_pose(0.0, 0.0);
+		    traj_gen->set_current_pose_as_ini();
                     traj_gen->set_final_pose(waypoint[0], waypoint[1]);
                     traj_gen->calc_params();
 
@@ -184,50 +183,8 @@ int main(int argc, char** argv)
                     traj_gen->set_final_pose(waypoint[0], waypoint[1]);
                     traj_gen->calc_params();
                 }
-                
-                if ( !collision_detected.data && collision_avoided )
-                {
-                    ROS_INFO("Collision Avoided, Switching Back to Current Waypoint");
-                    
-                    waypoint = waypoint_stack.get_current_waypoint();
-                    switch_trajectory->change_next_desired_state(waypoint[0], waypoint[1]);
 
-                    if (!switch_trajectory->current_hdg_within_tolerance_to_ref())
-                    {
-                        traj_gen = circular_traj;
-                        switch_trajectory->change_switch_condition(trajSwitchCond::delta_theta_to_ref);
-                        waypoint_stack.decrement_counter();
-                        aligned_rover = true;
-                    }
-                    else
-                    {
-                        traj_gen = min_jerk_traj;
-                        switch_trajectory->change_switch_condition(trajSwitchCond::dist_to_waypoint);
-                        aligned_rover = false;
-                    }
-    
-                    traj_gen->set_current_pose_as_ini();   
-                    traj_gen->set_final_pose(waypoint[0], waypoint[1]);
-                    traj_gen->calc_params();
-
-                    collision_avoided = false;
-                }
-                
-                
-                
-                if ( collision_detected.data )
-                {    
-                    ROS_INFO("Collision Detected ");
-                    collision_avoided = true;
-                }
-		else
-		{
-			traj_gen->generate_traj(ros::Time::now().toSec());	
-		}
-                
-
-	//	traj_gen->generate_traj(ros::Time::now().toSec());	
-
+                traj_gen->generate_traj(ros::Time::now().toSec());
             }
         }
         else if (!(sim.get_data())->data && updated_ini_params)
@@ -239,9 +196,9 @@ int main(int argc, char** argv)
             aligned_rover = false;
         }
 
-        if (traj_gen != nullptr)
+        if (traj_gen != nullptr && !collision_detected.data)
         { traj_pub.publish(*(traj_gen->get_trajectory())); }
-        else
+        else if (!collision_detected.data)
         { traj_pub.publish(*(min_jerk_traj->get_trajectory())); }
 
         ros::spinOnce();

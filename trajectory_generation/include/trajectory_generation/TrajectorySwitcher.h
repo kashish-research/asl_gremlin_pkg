@@ -40,7 +40,6 @@ class TrajectorySwitcher{
     asl_gremlin_pkg::SubscribeTopic<asl_gremlin_msgs::VehicleState>* vehicle_state_;
 
     public:
-        
         TrajectorySwitcher(ros::NodeHandle&);
         ~TrajectorySwitcher();
         
