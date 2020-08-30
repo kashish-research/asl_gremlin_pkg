@@ -8,33 +8,42 @@
         respawn="true"
         output="screen" />
 
+<!--      Added by Kashish      -->
 <node   ns="$(arg robot_name)"
         pkg="controller"
-        name="angular_vel_to_pwm_node"
+        name="angular_speed_controller"
+        type="angular_speed_controller"
+        respawn="true"
+        output="screen" />
+
+<!--    Following two nodes removed  by Kashish      -->
+<!-- node   ns="$(arg robot_name)"
+        pkg="controller"
+        name="angular_vel_to_pwm"
         type="angular_vel_to_pwm_node"
         respawn="true"
         output="screen" />
-     
+        
+ <node   ns="$(arg robot_name)"
+        pkg="controller"
+        name="cmd_pwm_to_arduino_pwm"
+        type="cmd_pwm_to_arduino_pwm"
+        respawn="true"
+        output="screen" / -->      
+
 <node   ns="$(arg robot_name)"
         pkg="controller"
         name="obstacle_pose_publisher"
         type="obstacle_pose"
         respawn="true"
-        output="screen" />        
-        
-<!--         --> 
-<node   ns="$(arg robot_name)"
-        pkg="controller"
-        name="cmd_pwm_to_arduino_pwm"
-        type="cmd_pwm_to_arduino_pwm"
-        respawn="true"
-        output="screen" />    
+        output="screen" />     
         
 <node   ns="$(arg robot_name)"
         pkg="controller"
         name="collision_cone"
         type="collision_cone_node"
         respawn="true"
-        output="screen" />             
- 
+        output="screen" />         
+
+
 </launch>

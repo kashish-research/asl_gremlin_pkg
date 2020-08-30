@@ -1,0 +1,9 @@
+<launch>
+
+<node   pkg="onboard_to_arduino"
+        name="onboard_to_arduino"
+        type="onboard_to_arduino"
+        respawn="true"
+        output="screen" />
+
+</launch>

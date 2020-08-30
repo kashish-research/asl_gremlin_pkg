@@ -41,9 +41,12 @@ int main(int argc, char** argv)
     if(!ctrl_nh.getParam("state_feedback/feedback_selected",act_state_topic))
     { act_state_topic = "state_feedback/selected_feedback"; }
 
-    if(!ctrl_nh.getParam("controller/bckstp_cmd_angular_vel",ang_vel_topic))
+//    if(!ctrl_nh.getParam("controller/cmd_angular_vel_topic",ang_vel_topic))
+//   { ang_vel_topic = "controller/cmd_angular_vel"; }
+
+if(!ctrl_nh.getParam("controller/bckstp_cmd_angular_vel",ang_vel_topic))
     { ang_vel_topic = "controller/bckstp_cmd_angular_vel"; }
-    
+
     SubscribeTopic<asl_gremlin_msgs::RefTraj> ref_traj(ctrl_nh, ref_traj_topic_name);
     SubscribeTopic<asl_gremlin_msgs::VehicleState> act_state(ctrl_nh, act_state_topic);
   
@@ -55,13 +58,6 @@ int main(int argc, char** argv)
 
     ros::Publisher ang_vel_cmd = ctrl_nh.advertise<MotorAngVel>
                                                     (ang_vel_topic, 20); 
-                                                    
-     ////////////////////////////////////////
-     ////Edited by Kashish
-   // ros::Publisher  cmd_vel = ctrl_nh.advertise<std_msgs::Float32>("controller/backstepping_cmd_vel",20);
-    ///End Edit                                               
-    ////////////////////////////////////////
-                                                    
     double rate = 10.0;
     if (!ctrl_nh.getParam("sim/rate", rate))
     {
@@ -73,7 +69,6 @@ int main(int argc, char** argv)
 
     ROS_INFO("\033[1;32mInitialized\033[0;m:= %s",ros::this_node::getName().c_str());
     bool initialized = false;
- //   double velocity_double; //Kashish
     while(ros::ok())
     {
         if ( (sim.get_data())->data )
@@ -89,16 +84,7 @@ int main(int argc, char** argv)
         }
         else
         { controller->reset(); initialized = false;}
-    
-     ////////////////////////////////////////
-     ////Edited by Kashish
-     //double velocity_double = controller->get_control_action_cmd_vel();
-   //  std_msgs::Float32 velocity_std;
-   //  velocity_std.data = velocity_double;
-   // cmd_vel.publish(velocity_std);    
-    ///End Edit                                         
-    ////////////////////////////////////////   
-    
+
        ang_vel_cmd.publish(*(controller->get_control_action()));
 
        ros::spinOnce();

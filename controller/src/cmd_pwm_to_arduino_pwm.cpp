@@ -34,14 +34,14 @@ int main(int argc, char** argv)
 	asl_gremlin_pkg::SubscribeTopic<std_msgs::Bool> sim(pwm2ard_nh,"start_sim");
 
     ros::Publisher pwm_pub = pwm2ard_nh.advertise<std_msgs::Int16MultiArray>
-                                                        ("arduino/cmd_pwm1",20);
+                                                        ("arduino/cmd_pwm",20);
     double rate = 10.0;
     if (!pwm2ard_nh.getParam("sim/rate", rate))
     {
         ROS_WARN("Unable access parameter /%s/sim/rate, setting rate as 10Hz",
                  ros::this_node::getNamespace().c_str());
     }
-    ros::Rate loop_rate(rate);
+    ros::Rate loop_rate(50); //Kashish changed it to 50
     
 	std_msgs::Int16MultiArray pwm_arr;
 	pwm_arr.data.clear();
@@ -68,13 +68,13 @@ int main(int argc, char** argv)
     	
     	if ( initiated )
     	{
-    		pwm_left =  (cmd_pwm.get_data())->pwm_l;
+    		pwm_left = (cmd_pwm.get_data())->pwm_l;
     		pwm_right = (cmd_pwm.get_data())->pwm_r;
     	}
     	else
     	{	pwm_left = 0; pwm_right = 0;	}
     	
-		pwm_arr.data[0] = pwm_left;
+		pwm_arr.data[0] = -pwm_left;
 		pwm_arr.data[1] = pwm_right;
         pwm_pub.publish(pwm_arr);
         

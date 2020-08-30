@@ -17,6 +17,10 @@ robot_name = ("/" + robot_name[1]).replace('"','')
 if robot_name == "" or robot_name == "/":
 	robot_name = "/asl_gremlin1"
 
+## Hard code the robot name. //  sometimes correct robot_name is not accessible so we have to hard code it.
+robot_name = "/asl_gremlin2"
+
+
 ## Read bagfile
 bag = rosbag.Bag(sys.argv[1])
 

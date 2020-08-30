@@ -1,3 +1,4 @@
+
 /**
  * @brief CollisionCone definitions
  * @file CollisionCone.cpp
@@ -45,7 +46,12 @@ CollisionCone::CollisionCone(ros::NodeHandle& nh)
    
  	filterCurrentIndex = 0;     
    
+    roverSpeedFiltered = 0;
     
+    roverSpeedFilteredX = 0;
+    
+    roverSpeedFilteredY = 0;
+  
 }
 
 
@@ -58,64 +64,116 @@ void CollisionCone::computeCollisionConeY()
     
     double roverSpeedY =  (vehicleState.pose.point.y - vehicleStatePrevious.pose.point.y) / deltaT;
     
+    if( ::isnan(roverSpeedX) || roverSpeedX>10)
+    roverSpeedX = 0;
+    
+    if( ::isnan(roverSpeedY) || roverSpeedY>10)
+    roverSpeedY = 0;
+    
     roverSpeed = std::sqrt(roverSpeedX*roverSpeedX + roverSpeedY*roverSpeedY);
     
-	roverSpeedVectorX.insert( roverSpeedVectorX.begin()+filterCurrentIndex, roverSpeedX);
+    roverSpeedVectorX[filterCurrentIndex] =  roverSpeedX;
 	
-	roverSpeedVectorY.insert( roverSpeedVectorY.begin()+filterCurrentIndex, roverSpeedY);
+	roverSpeedVectorY[filterCurrentIndex] =  roverSpeedY;
 	
-	roverSpeedFilteredX += accumulate(roverSpeedVectorX.begin(),
-							roverSpeedVectorX.end(),0) / slidingFilterLength;
+	roverSpeedFilteredX = accumulate(roverSpeedVectorX.begin(),
+							roverSpeedVectorX.end(),0.0 )  / slidingFilterLength;
 	
-	roverSpeedFilteredY += accumulate(roverSpeedVectorY.begin(),
-								roverSpeedVectorY.end(),0) / slidingFilterLength;
-	
+	roverSpeedFilteredY = accumulate(roverSpeedVectorY.begin(),
+								roverSpeedVectorY.end(),0.0 ) / slidingFilterLength;
+		
 	roverSpeedFiltered = std::sqrt(roverSpeedFilteredX*roverSpeedFilteredX +
-									 roverSpeedFilteredY*roverSpeedFilteredY);
+	                            roverSpeedFilteredY*roverSpeedFilteredY);
 	
-	filterCurrentIndex = (filterCurrentIndex + 1) % 100;
+	/*	Debug Printing							 
+	std::cout << "X: " ;
+	
+	for(int i=0; i < roverSpeedVectorX.size(); i++)
+    {
+   std::cout  << roverSpeedVectorX.at(i) << ' ';
+   }
+                   
+   std::cout << " Sum: " << roverSpeedFilteredX << std::endl;
+   
+   std::cout << "Y: " ;
+   
+   for(int i=0; i < roverSpeedVectorY.size(); i++)
+    {
+   std::cout << roverSpeedVectorY.at(i) << ' ';
+   }
+   
+    std::cout << " Sum: " << roverSpeedFilteredY << std::endl;
+   
+   std::cout << "\n";
+	
+	std::cout << std::to_string(roverSpeedFiltered) << " \n" ;
+	*/
 
+        filterCurrentIndex++;
+	filterCurrentIndex %= slidingFilterLength;
+    
     double distanceRoverWp = std::sqrt( std::pow(vehicleState.pose.point.x-obstacleState.pose.point.x,2) + 
                                         std::pow(vehicleState.pose.point.y-obstacleState.pose.point.y,2) );
        
     double LosAngle = std::atan2(obstacleState.pose.point.y-vehicleState.pose.point.y, 
                                         obstacleState.pose.point.x-vehicleState.pose.point.x);
    
-    double headingAngle =  std::atan2(roverSpeedFilteredY,roverSpeedFilteredX);      
+    headingAngle =  std::atan2(roverSpeedFilteredY,roverSpeedFilteredX);      
 
-    double Vr =  - roverSpeedFiltered * std::cos(headingAngle-LosAngle);       
-    double Vtheta =   - roverSpeedFiltered * std::cos(headingAngle-LosAngle);   
+    Vr =  - roverSpeedFiltered * std::cos(headingAngle-LosAngle);       
+    Vtheta =   - roverSpeedFiltered * std::sin(headingAngle-LosAngle);   
  
-    collisionConeY =  pow(distanceRoverWp,2)*pow(Vtheta,2)/( pow(Vtheta,2) + pow(distanceRoverWp,2)) - pow(radiusSum,2);
-    
-    //std::cout <<  std::to_string(collisionConeY) << std::endl;
-    
-   // collisionConeY = -1;
+	if(roverSpeedFiltered>0.05)
+	{
+    collisionConeY =  pow(distanceRoverWp,2)*pow(Vtheta,2)/( pow(Vtheta,2) + pow(Vr,2)) - pow(radiusSum,2);
     
     timeToCollision = -Vr*distanceRoverWp/( pow(Vr,2) + pow(Vtheta,2)); 
+	}
+	else
+	{
+		collisionConeY =  0;
     
+    		timeToCollision = 0; 
+
+	}   
+ 
+	double refAccX, refAccY, refVelX, refVelY, refX, refY;
          
-  if (collisionConeY<0 & timeToCollision>0 & timeToCollision<timeToCollisionThrshold)
+  if (collisionConeY<0 & Vr<0 & timeToCollision<timeToCollisionThrshold)
 
     { 
     
-    double  refCollisionConeY = 0.1; double K = SIGN(timeToCollision);
+    double  refCollisionConeY = 0.01; double K = SIGN(timeToCollision)*0.2;
     
     double num = -K*(refCollisionConeY-collisionConeY)/(2*pow(distanceRoverWp,2)*Vtheta*Vr);
     
     double den = Vr*std::cos(headingAngle-LosAngle) + Vtheta*std::sin(headingAngle-LosAngle);
     
-    aLat = num/den; 
+    aLat = num/den;
+
+    refAccX = aLat*std::cos(headingAngle + M_PI/2);
+    refAccY = aLat*std::sin(headingAngle + M_PI/2);
+    
+    refVelX = roverSpeedFilteredX + refAccX * deltaT;
+    refVelY = roverSpeedFilteredY + refAccY * deltaT;
+
+
+    }
+
+    else
+
+    {
+
+    aLat=0; refAccX = 0; refAccY = 0;
+    
+    refVelX = 0.5*std::cos(vehicleState.heading*M_PI/180);
+    refVelY = 0.5*std::sin(vehicleState.heading*M_PI/180);
+
+    }
+
+    refX = vehicleState.pose.point.x + refVelX * deltaT;
+    refY = vehicleState.pose.point.y + refVelY * deltaT; 
         
-    double refAccX = aLat*std::cos(headingAngle + M_PI/2);
-    double refAccY = aLat*std::sin(headingAngle + M_PI/2);
-    
-    double refVelX = roverSpeedFilteredX + refAccX * deltaT;
-    double refVelY = roverSpeedFilteredY + refAccY * deltaT;
-    
-    double refX = vehicleState.pose.point.x + refVelX * deltaT;
-    double refY = vehicleState.pose.point.y + refVelY * deltaT;
-    
     refCollAvoidTraj.header.stamp = ros::Time::now();
     refCollAvoidTraj.header.frame_id = "collision_avoidance";
     refCollAvoidTraj.x = refX; 
@@ -128,12 +186,9 @@ void CollisionCone::computeCollisionConeY()
     refCollAvoidTraj.theta_dot = 0;
     refCollAvoidTraj.theta_ddot = 0;
     
-    }
- 
- 
+    } 
   
   
-    }
     
 void CollisionCone::setTimeToCollsnThrshold(double tm_thrshhold) 
 {timeToCollisionThrshold = tm_thrshhold;}
@@ -154,8 +209,16 @@ double CollisionCone::getRoverSpeed() {return roverSpeed;}
 
 double CollisionCone::getRoverSpeedFiltered() {return roverSpeedFiltered;} 
 
+double CollisionCone::getaLat() {return aLat;} 
+
+double CollisionCone::getVr() {return Vr;} 
+
+double CollisionCone::getHeadingAngle() {return headingAngle;} 
+
+
 CollisionCone::~CollisionCone()
 {
 
 }
+
 

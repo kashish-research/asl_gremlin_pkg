@@ -45,16 +45,19 @@ class CollisionCone{
 	double roverSpeedFiltered;
 	double roverSpeedFilteredX;
 	double roverSpeedFilteredY;
-        double collisionConeY;
+	double Vr;
+	double Vtheta;
+        double headingAngle;
+	double collisionConeY;
         double timeToCollision;
         double timeToCollisionThrshold;
         double radiusSum=0.5; // radius of vehicle + radius of obstacle
         double aLat;
         asl_gremlin_msgs::RefTraj refCollAvoidTraj; 
         int slidingFilterLength=10;
-	vector<double> roverSpeedVectorX{vector<double>(slidingFilterLength,0)};
-	vector<double> roverSpeedVectorY{vector<double>(slidingFilterLength,0)};     
-	int filterCurrentIndex;    
+    	vector<double> roverSpeedVectorX{vector<double>(slidingFilterLength,0)};
+	    vector<double> roverSpeedVectorY{vector<double>(slidingFilterLength,0)};     
+	    int filterCurrentIndex;    
         
 
     public:
@@ -71,6 +74,9 @@ class CollisionCone{
         double getRoverSpeed();
         double getTimeToCollsnThrshold();
         double getRoverSpeedFiltered();
+	double getaLat();
+	double getVr();
+	double getHeadingAngle();
         void setTimeToCollsnThrshold(double tm_thrshhold);
         ~CollisionCone();
         

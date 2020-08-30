@@ -13,23 +13,17 @@
 
 #include <ros/ros.h>
 #include <controller/OmegaToPWM.h>
-#include <controller/CollisionCone.h>
 #include <asl_gremlin_msgs/MotorPwm.h>
 #include <string>
-#include <asl_gremlin_msgs/VehicleState.h>
 
 using namespace controller;
 
-
-
-
 int main(int argc, char** argv)
 {
-   ros::init(argc, argv, "angular_vel_to_pwm");
+    ros::init(argc, argv, "angular_vel_to_pwm");
     ros::NodeHandle w2pwm_nh;
     
- 
-    
+
     OmegaToPWM omega_to_pwm(w2pwm_nh);
 
     ros::spinOnce();
@@ -47,7 +41,7 @@ int main(int argc, char** argv)
         ROS_WARN("Unable access parameter /%s/sim/rate, setting rate as 10Hz",
                     ros::this_node::getNamespace().c_str());
     }
-    ros::Rate loop_rate(rate);
+    ros::Rate loop_rate(50); //Kashish changed it to 50
     
     ROS_INFO("\033[1;32mInitialized\033[0;m:= %s",ros::this_node::getName().c_str());
     while(ros::ok())

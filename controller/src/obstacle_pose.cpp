@@ -12,6 +12,14 @@
  */
 #include <ros/ros.h>
 #include <asl_gremlin_msgs/VehicleState.h>
+#include <geometry_msgs/TransformStamped.h>
+
+
+geometry_msgs::TransformStamped obstacle_state;
+void obstacle_cb(const geometry_msgs::TransformStamped::ConstPtr& msg)
+{
+    obstacle_state = *msg;
+}
 
 int main(int argc, char** argv)
 {
@@ -24,7 +32,9 @@ int main(int argc, char** argv)
 
     ros::Publisher pub = nh.advertise<asl_gremlin_msgs::VehicleState>
             ("/asl_gremlin1/obstacle/pose", 10);    
-                     
+
+    ros::Subscriber obstacle_sub = nh.subscribe<geometry_msgs::TransformStamped>
+            ("/vicon/obstacle/obstacle", 10, obstacle_cb);                     
         int count = 1;  
     
     asl_gremlin_msgs::VehicleState pose;
@@ -34,14 +44,15 @@ int main(int argc, char** argv)
         pose.pose.header.stamp = ros::Time::now();
         pose.pose.header.seq=count;
         pose.pose.header.frame_id = "Inertial Frame";  
-        pose.pose.point.x = 0;
-        pose.pose.point.y = 0;
-        pose.pose.point.z = 0;
+        pose.pose.point.x = 100; //obstacle_state.transform.translation.x;
+        pose.pose.point.y = 100; //obstacle_state.transform.translation.y;
+        pose.pose.point.z = obstacle_state.transform.translation.z;
         pose.heading = 0;
     	pub.publish(pose);
         count++;
         ros::spinOnce();
         rate.sleep();
+
     }
     
 

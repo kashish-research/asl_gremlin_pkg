@@ -7,9 +7,15 @@
     <include file="$(find mavros)/launch/apm2.launch" 
         ns="$(arg robot_name)" />
         -->
-                        <!-- Launch ROSSERIAL 
+        
+                        <!-- Launch ROSSERIAL -->
     <node ns="$(arg robot_name)" name="rosserial" pkg="rosserial_python" type="serial_node.py" respawn="true">
     <param name="port" value="$(arg arduino_port)" /> 
 	</node>
--->
+
+   <!--  	<include file="$(find onboard_to_arduino)/launch/launch_onboardToArduino.launch"/> -->
+
+
+
+
 </launch>

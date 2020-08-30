@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export ROS_MASTER_URI=http://192.168.10.2:11311
+
 source this_robot_name.sh
 
 # give the robot a name, so all the nodes will be launched under it's namespace
